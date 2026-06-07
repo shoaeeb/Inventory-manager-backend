@@ -19,6 +19,9 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.get("/health", (req, res) => {
+  res.json({ health: "OK" });
+});
 app.listen(process.env.PORT, () => {
   console.log(`Server running on port ${process.env.PORT}`);
 });
