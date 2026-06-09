@@ -3,7 +3,13 @@ import { upload, cloudinary } from "../config/cloudinary.js";
 import { inventorySchema } from "../middleware/inventory.validation.js";
 
 export const getAllInventoryList = async (req, res, next) => {
-  const { search = "", minPrice, maxPrice, page = 1 } = req.query;
+  const {
+    search = "",
+    minPrice,
+    maxPrice,
+    category = "",
+    page = 1,
+  } = req.query;
   const limit = 5;
   const offset = (parseInt(page) - 1) * limit;
   const min = minPrice ? parseFloat(minFloat) : 0;
@@ -16,6 +22,7 @@ export const getAllInventoryList = async (req, res, next) => {
         AND name ILIKE ${"%" + search + "%"}
         AND price >=${min}
         AND price <=${max}
+        AND (${category} = '' OR category = ${category})
         ORDER BY created_at DESC
         LIMIT ${limit} OFFSET ${offset}
         `;
@@ -25,6 +32,7 @@ export const getAllInventoryList = async (req, res, next) => {
         AND name ILIKE ${"%" + search + "%"}
         AND price >= ${min}
         And price <= ${max}
+        AND (${category} = '' OR category = ${category})
         `;
     res.json({
       items,
@@ -51,12 +59,14 @@ export const createInventory = async (req, res) => {
     });
   }
 
-  const { name, price } = result.data;
+  const { name, price, quantity, category } = result.data;
 
   try {
     const [item] = await sql`
-    INSERT INTO inventory (user_id,name,price,image_url,image_public_id)
-    VALUES (${req.user.userId},${name},${parseFloat(price)},${req.file.path} ,${
+    INSERT INTO inventory (user_id,name,price,quantity,category,image_url,image_public_id)
+    VALUES (${req.user.userId},${name},${parseFloat(
+      price
+    )},${quantity},${category},${req.file.path} ,${
       req.file.filename
     }) RETURNING * `;
 
@@ -112,13 +122,15 @@ export const updateInventory = async (req, res) => {
       image_public_id = req.file.filename;
     }
 
-    const { name, price } = result.data;
+    const { name, price, quantity, category } = result.data;
 
     const [updated] = await sql`
     UPDATE inventory
     SET
       name = ${name || existing.name},
       price = ${price ? parseFloat(price) : existing.price},
+      quantity= ${quantity || existing.quantity},
+      category = ${category || existing.category},
       image_url = ${image_url},
       image_public_id = ${image_public_id}
     WHERE id = ${id} AND user_id = ${req.user.userId}

@@ -4,21 +4,21 @@ export const getDashboardStats = async (req, res) => {
   try {
     const [stats] = await sql`
      SELECT
-        COUNT(*) as total_items,
-        COALESCE(SUM(price),0) as total_value,
+         COALESCE(SUM(quantity)) as total_items,
+        COALESCE(SUM(price * quantity ),0) as total_value,
         MAX(price) as highest_price
         FROM inventory
         where user_id = ${req.user.userId}
     `;
     const [mostExpensive] = await sql`
-    SELECT name,price,image_url from inventory
+    SELECT name,price,image_url,quantity,category from inventory
     WHERE user_id = ${req.user.userId}
     ORDER BY price DESC
     LIMIT 1
     `;
 
     const recentItems = await sql`
-    SELECT name,price,image_url FROM inventory
+    SELECT name,price,image_url,quantity,category FROM inventory
     WHERE user_id = ${req.user.userId}
     ORDER BY created_at DESC
     LIMIT 3

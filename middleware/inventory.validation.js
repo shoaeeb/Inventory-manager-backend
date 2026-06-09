@@ -8,4 +8,10 @@ export const inventorySchema = z.object({
     .refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
       message: "Price must be a positive number",
     }),
+  quantity: z.coerce
+    .number()
+    .int()
+    .min(1, "Quantity must be atleast 1")
+    .default(1),
+  category: z.string().default("Uncategorized"),
 });
